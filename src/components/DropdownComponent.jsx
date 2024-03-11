@@ -21,7 +21,7 @@ export default function DropdownComponent() {
   }
 
   const handleInvite = () => {
-    navigator.clipboard.writeText("SharePay Website");
+    navigator.clipboard.writeText("https://share-pay.vercel.app/");
     toast.info("Link Copied Succesfully")
   }
 
