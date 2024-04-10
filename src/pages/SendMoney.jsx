@@ -4,7 +4,6 @@ import { useState } from "react";
 import Appbar from "../components/Appbar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../config";
 
 const SendMoney = () => {
@@ -12,16 +11,18 @@ const SendMoney = () => {
   const id = searchParams.get("id");
   const name = searchParams.get("name");
   const [amount, setAmount] = useState(0);
-
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const transferMoney = async () => {
+    if (loading) return;
     const token = localStorage.getItem("token");
     try {
+      setLoading(true);
       if (amount < 1) {
+        setLoading(false);
         return toast.error("The Minimum amount you can transfer is ₹1");
       }
-      toast.info("Transferring.....");
+
       await axios.post(
         `https://${BACKEND_URL}/api/v1/account/transfer`,
         {
@@ -34,9 +35,11 @@ const SendMoney = () => {
           },
         }
       );
-      await new Promise((res) => setTimeout(() => {res()},500))
       toast.success(`₹${amount} is transferred successfully to ${name}`, {
-        onClose: () => navigate("/dashboard"),
+        onClose: () => {
+          setAmount(0);
+          setLoading(false);
+        },
       });
     } catch (error) {
       toast.error("Error");
@@ -46,12 +49,7 @@ const SendMoney = () => {
   return (
     <div>
       <div>
-      <ToastContainer
-        autoClose={300}
-        hideProgressBar={true}
-        position="top-center"
-        stacked={true}
-      />
+        <ToastContainer autoClose={400} hideProgressBar={true} stacked={true} />
         <Appbar />
       </div>
       <div className="flex justify-center bg-gray-100 h-screen">
@@ -78,18 +76,37 @@ const SendMoney = () => {
                     type="number"
                     className="flex h-10 w-full rounded-md border border-gray-400 bg-background px-3 py-2 text-sm focus:outline-none"
                     id="amount"
+                    value={amount == 0 ? "Enter amount" : amount}
                     placeholder="Enter amount"
                     onChange={(e) => {
                       setAmount(e.target.value);
                     }}
                   />
                 </div>
-                <button
+                {!loading ? (
+                  <button
+                    onClick={transferMoney}
+                    className="w-full text-white font-medium rounded-md px-4 py-2 bg-blue-500 "
+                  >
+                    Initiate Transfer
+                  </button>
+                ) : (
+                  <button
+                    className="w-full bg-gray-400 px-4 py-2 rounded-md text-white font-medium"
+                    disabled
+                  >
+                    Loading...
+                  </button>
+                )}
+                {/* <button
                   onClick={transferMoney}
-                  className="justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 px-4 py-2 w-full bg-blue-500 text-white"
+                  disabled={loading}
+                  className={`justify-center rounded-md text-sm font-medium ring-offset-background transition-colors h-10 px-4 py-2 w-full ${
+                    loading ? "bg-gray-400" : "bg-blue-500"
+                  } text-white`}
                 >
-                  Initiate Transfer
-                </button>
+                  {loading ? "Loading..." : "Initiate Transfer"}
+                </button> */}
               </div>
             </div>
           </div>
